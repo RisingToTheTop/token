@@ -1,10 +1,23 @@
+const { privateKey, alchemyApiKey, polygonscanApiKey, etherscanApiKey } = require("./secrets.json");
+require("@nomiclabs/hardhat-etherscan");
+require("@nomiclabs/hardhat-waffle");
+require('@nomiclabs/hardhat-ethers');
+require("hardhat-gas-reporter");
+require('hardhat-contract-sizer');
+require("solidity-coverage");
+require('hardhat-deploy');
+require('hardhat-deploy-ethers');
+
 module.exports = {
   solidity: {
     version: "0.8.7",
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 200,
+        details: {
+          yul: false
+        }
       }
     }
   },
@@ -12,7 +25,7 @@ module.exports = {
     currency: 'JPY',
     coinmarketcap: 'e9a2f0b2-8e69-4298-8d70-89b9a0064144',
     token: 'ETH',
-    gasPrice: 30
+    gasPrice: 20
   },
   contractSizer: {
     alphaSort: false,

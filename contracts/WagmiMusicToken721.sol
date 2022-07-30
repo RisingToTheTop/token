@@ -302,7 +302,6 @@ contract WAGMIMusicToken721 is ERC721Upgradeable, IERC2981Upgradeable, OwnableUp
     uint256 _withdrawable = 0;
     for(uint256 id=1; id < newMusicId.current(); id++){
       uint256 dist = _getDistribution(id) - _withdrawnForEach[id][_msgSender()];
-      _deposit[id] -= dist;
       _withdrawnForEach[id][_msgSender()] += dist;
       _withdrawable += dist;
     }
