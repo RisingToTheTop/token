@@ -2,17 +2,22 @@
 const dotenv = require("dotenv");
 dotenv.config(); // setup dotenv
 
-const Moralis = require("moralis/node");
+const Moralis = require("moralis-v1/node");
 const request = require("request");
 const fs = require("fs");
 const { default: axios } = require("axios");
-const { albumId, editionSize, assetElement } = require("../asset/config.js");
+const { editionSize, assetElement } = require("../../assets/config.js");
 
-const serverUrl = process.env.MORALIS_SERVER_URL;
-const appId = process.env.MORALIS_APPLICATION_ID;
-const masterKey = process.env.MASTER_KEY;
-const apiUrl = process.env.API_URL;
-const apiKey = process.env.API_KEY;
+// const serverUrl = process.env.MORALIS_SERVER_URL;
+// const appId = process.env.MORALIS_APPLICATION_ID;
+// const masterKey = process.env.MASTER_KEY;
+// const apiUrl = process.env.API_URL;
+// const apiKey = process.env.API_KEY;
+const serverUrl = "https://4d8xasi5xhdn.usemoralis.com:2053/server";
+const appId = "dgicIpm38D7Swob4KfRN2EpjqJbCLpMxCjMFKd95";
+const masterKey = "1JAgUGg1CFFlFaAcjUqyZ4wd59otx48ba4HzJKjS";
+const apiUrl = "https://deep-index.moralis.io/api/v2/ipfs/uploadFolder";
+const apiKey = "Xe3Rkn1tkm7dc83ElaTUbsNNtdcYR2Gi5jrmrSsUbdxL4DYr5EHo8ZNXpaPEDXie";
 
 Moralis.start({ serverUrl, appId, masterKey});
 
@@ -29,7 +34,7 @@ const writeMetaData = (metadata) => {
 const saveToDb = async (metaHash) => {
   for(let i = 1; i <= editionSize; i++){
     let id = i.toString();
-    let url = `https://ipfs.moralis.io:2053/ipfs/${metaHash}/metadata/${albumId}/${id}`;
+    let url = `https://ipfs.moralis.io:2053/ipfs/${metaHash}/metadata/${id}`;
     let options = { json: true };
   
     request(url, options, (error, res, body) => {
@@ -100,7 +105,7 @@ const uploadImage = async () => {
     let music_file = new Moralis.File("music.mp3", { base64: `data:audio/${mfiletype};base64,${music_base64}` });
     await image_file.saveIPFS({ useMasterKey: true });
     await music_file.saveIPFS({ useMasterKey: true });
-    console.log(`Processing ${i+1}/${editionSize}...`)
+    console.log(`Processing ${i}/${editionSize}...`)
     console.log("IPFS address of Image: ", image_file.ipfs());
     console.log("IPFS address of Music: ", music_file.ipfs());
    
@@ -143,8 +148,8 @@ const createMetadata = async () => {
 }
 
 const uploadMetadata = async () => {
-  const promiseArray = []; 
-  const ipfsArray = []; 
+  const promiseArray = [];
+  const ipfsArray = [];
 
   for(let i = 1; i <= editionSize; i++){
     let id = i.toString();
@@ -155,7 +160,7 @@ const uploadMetadata = async () => {
         fs.readFile(`./output/${id}.json`, (err, data) => {
           if (err) rej();
           ipfsArray.push({
-            path: `metadata/${albumId}/${id}`,
+            path: `metadata/${id}`,
             content: data.toString("base64")
           });
           res();
@@ -188,7 +193,7 @@ const uploadMetadata = async () => {
 };
 
 const startCreating = async () => {
-  await createMetadata();
+  // await createMetadata();
   await uploadMetadata();
   console.log("All finished!")
 };

@@ -19,10 +19,11 @@ import {MerkleProofUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/
 import {StringsUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 /**
- * @title WAGMIMusicToken1155
+ * @title Token1155
  * @author WAGMIMusic
  */
-contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, OwnableUpgradeable {
+
+contract Token1155 is ERC1155Upgradeable, IERC2981Upgradeable, OwnableUpgradeable {
   using CountersUpgradeable for CountersUpgradeable.Counter;
   using StringsUpgradeable for uint256;
 
@@ -30,12 +31,12 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     address payable[] stakeHolders;// 収益の受領者(筆頭受領者=二次流通ロイヤリティの受領者)
     uint256[2] prices;// [preSale価格，publicSale価格]
     uint32[] share;// 収益の分配率
+    uint32[2] purchaseLimits; // [preSale購入制限，publicSale購入制限]
     uint32 numSold;// 現在のトークン発行量
     uint32 quantity;// トークン発行上限
     uint32 presaleQuantity;// プレセール配分量
     uint32 royalty;// 二次流通時の印税(using 2 desimals)
     uint32 album;// 収録アルバムid
-    uint32 purchaseLimit; // 購入制限
     bytes32 merkleRoot;// マークルルート
   }
 
@@ -43,9 +44,10 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     address payable[] _stakeHolders;
     uint256[] _presalePrices;
     uint256[] _prices;
-    uint32[] _quantities;
     uint32[] _presaleQuantities;
+    uint32[] _quantities;
     uint32[] _share;
+    uint32[] _presalePurchaseLimits;
     uint32[] _purchaseLimits;
     uint32 _royalty;
     bytes32 _merkleRoot;
@@ -62,7 +64,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   // アルバムのID
   CountersUpgradeable.Counter private newAlbumId;
   // 販売状態(列挙型)
-  enum SaleState {Presale, PublicSale, Suspended} 
+  enum SaleState {Prepared, Presale, PublicSale, Suspended} 
 
   // 楽曲id => 楽曲データ
   mapping(uint256 => Music) public musics;
@@ -71,12 +73,12 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   // アルバムid => アルバムサイズ
   mapping(uint256 => uint32) private _albumSize;
   // 楽曲id, アドレス => mint数
-  mapping(uint256=>mapping(address => uint32)) public tokenClaimed;
+  mapping(uint256=>mapping(address => uint32)) private _tokenClaimed;
   // 実行権限のある執行者
   mapping(address => bool) private _agent;
   // 楽曲id => 累積デポジット
   mapping(uint256 => uint256) private _deposit;
-  mapping(uint256 => mapping(address => uint256)) private _withdrawnForEach;
+  mapping(address => uint256) private _withdrawnForEach;
 
   event MusicCreated(
     uint256 indexed tokenId,
@@ -143,10 +145,10 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     @dev 楽曲データの作成(既存のアルバムに追加)
     @param _stakeHolders 収益の受領者
     @param _share 収益の分配率
-    @param _purchaseLimit 購入制限数
-    @param _prices [preSale価格，publicSale価格]
-    @param _quantity トークン発行量
+    @param _purchaseLimits [presale購入制限数, publicSale購入制限数]
+    @param _prices [presale価格, publicSale価格]
     @param _presaleQuantity プレセール配分量
+    @param _quantity トークン発行量
     @param _royalty 二次流通時の印税
     @param _merkleRoot マークルルート
     @param _albumId アルバムID(universalAlbum=0)
@@ -155,7 +157,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     address payable[] calldata _stakeHolders,
     uint256[2] memory _prices,
     uint32[] calldata _share,
-    uint32 _purchaseLimit,
+    uint32[2] calldata _purchaseLimits,
     uint32 _quantity,
     uint32 _presaleQuantity,
     uint32 _royalty,
@@ -171,12 +173,12 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
       stakeHolders: _stakeHolders,
       prices: _prices,
       share: _share,
+      purchaseLimits: _purchaseLimits,
       numSold: 0,
       quantity: _quantity,
       presaleQuantity: _presaleQuantity,
       royalty: _royalty,
       album: uint32(_albumId),
-      purchaseLimit: _purchaseLimit,
       merkleRoot: _merkleRoot
     });
 
@@ -192,11 +194,11 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
       _merkleRoot
     );
 
-    // sales: default => suspended
-    sales[newTokenId.current()] = SaleState.Suspended;
+    // sales: default => prepared
+    sales[newTokenId.current()] = SaleState.Prepared;
     // increment TokenId and AlbumId
     newTokenId.increment();
-    _albumSize[_albumId]++;
+    ++_albumSize[_albumId];
   }
 
   /**
@@ -207,16 +209,8 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     Album calldata album
   ) external virtual onlyOwnerOrAgent {
     // データの有効性を確認
-    _validateAlbum(
-      album._stakeHolders, 
-      album._presalePrices, 
-      album._prices, 
-      album._quantities, 
-      album._presaleQuantities, 
-      album._share, 
-      album._purchaseLimits
-    );
-    for(uint256 i=0; i<album._quantities.length; i++){
+    _validateAlbum(album);
+    for(uint256 i=0; i<album._quantities.length; ++i){
       musics[newTokenId.current()] =
       Music({
         stakeHolders: album._stakeHolders,
@@ -227,7 +221,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
         presaleQuantity: album._presaleQuantities[i],
         royalty: album._royalty,
         album: uint32(newAlbumId.current()),
-        purchaseLimit: album._purchaseLimits[i],
+        purchaseLimits: [album._presalePurchaseLimits[i],album._purchaseLimits[i]],
         merkleRoot: album._merkleRoot
       });
 
@@ -243,10 +237,10 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
         album._merkleRoot
       );
       // sales: default => suspended
-      sales[newTokenId.current()] = SaleState.Suspended;
+      sales[newTokenId.current()] = SaleState.Prepared;
       // increment TokenId and AlbumId
       newTokenId.increment();
-      _albumSize[newAlbumId.current()]++;
+      ++_albumSize[newAlbumId.current()];
     }
     newAlbumId.increment();
   }
@@ -273,27 +267,30 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     
     // _tokenIdの有効性を確認
     require(_exists(_tokenId), 'The music does not exist');
-    // 販売状態の確認
-    require(sales[_tokenId] != SaleState.Suspended, 'Sale is suspended now');
     // 在庫の確認
     require(musics[_tokenId].numSold + _amount <= musics[_tokenId].quantity, 'Amount exceed stock');
-    // 購入制限数の確認
-    require(tokenClaimed[_tokenId][_msgSender()] + _amount <=  musics[_tokenId].purchaseLimit, "Accumulayion amount of mint exceeds limit");
 
     // セール期間による分岐
     if (sales[_tokenId] == SaleState.Presale) {
+      // 購入制限数の確認
+      require(_tokenClaimed[_tokenId][_msgSender()] + _amount <=  musics[_tokenId].purchaseLimits[0], "Accumulayion amount of mint exceeds limit");
       _validateWhitelist(_tokenId, _merkleProof);
       // プレセール時の支払価格の確認
       require(msg.value >= musics[_tokenId].prices[0] * _amount,'Must send enough to purchase token.');
-    }else{
+    }else if(sales[_tokenId] == SaleState.PublicSale){
+      // 購入制限数の確認
+      require(_tokenClaimed[_tokenId][_msgSender()] + _amount <=  musics[_tokenId].purchaseLimits[1], "Accumulayion amount of mint exceeds limit");
       // パブリックセール時の支払価格の確認
       require(msg.value >= musics[_tokenId].prices[1] * _amount,'Must send enough to purchase token.');
+    }else{
+      // SaleState: prepared or suspended
+      revert("Tokens aren't on sale now");
     }
     // Reentrancy guard
     // 発行量+_amount
     musics[_tokenId].numSold += _amount;
     // 購入履歴+_amount
-    tokenClaimed[_tokenId][_msgSender()] += _amount;
+    _tokenClaimed[_tokenId][_msgSender()] += _amount;
     // デポジットを更新
     _deposit[_tokenId] += msg.value;
     _mint(_msgSender(), _tokenId, _amount, _data);
@@ -314,7 +311,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   function suspendSale (
     uint256[] calldata _tokenIds
   ) external virtual onlyOwnerOrAgent {
-    for(uint256 i=0; i<_tokenIds.length; i++){
+    for(uint256 i=0; i<_tokenIds.length; ++i){
       sales[_tokenIds[i]] = SaleState.Suspended;
       emit NowOnSale(_tokenIds[i], sales[_tokenIds[i]]);
     }
@@ -327,7 +324,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   function startPresale (
     uint256[] calldata _tokenIds
   ) external virtual onlyOwnerOrAgent {
-    for(uint256 i=0; i<_tokenIds.length; i++){
+    for(uint256 i=0; i<_tokenIds.length; ++i){
       sales[_tokenIds[i]] = SaleState.Presale;
       emit NowOnSale(_tokenIds[i], sales[_tokenIds[i]]);
     }
@@ -340,7 +337,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   function startPublicSale (
     uint256[] calldata _tokenIds
   ) external virtual onlyOwnerOrAgent {
-    for(uint256 i=0; i<_tokenIds.length; i++){
+    for(uint256 i=0; i<_tokenIds.length; ++i){
       sales[_tokenIds[i]] = SaleState.PublicSale;
       emit NowOnSale(_tokenIds[i], sales[_tokenIds[i]]);
     }
@@ -355,7 +352,7 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     uint256[] calldata _tokenIds,
     bytes32 _merkleRoot
   ) public virtual onlyOwnerOrAgent {
-    for(uint256 i=0; i<_tokenIds.length; i++){
+    for(uint256 i=0; i<_tokenIds.length; ++i){
       musics[_tokenIds[i]].merkleRoot = _merkleRoot;
     }
   }
@@ -383,10 +380,10 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
       require(_existsAlbum(_albumId), 'The album does not exist');
       uint256[] memory _tokenIdsOfAlbum = new uint256[](_albumSize[_albumId]);
       uint256 index = 0;
-      for (uint256 id = 1; id < newTokenId.current(); id++){
+      for (uint256 id = 1; id < newTokenId.current(); ++id){
         if (musics[id].album == _albumId) {
           _tokenIdsOfAlbum[index] = id;
-          index++;
+          ++index;
         }
       }
       return _tokenIdsOfAlbum;
@@ -397,35 +394,38 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     @dev 収益の引き出し
     @param _recipient 受領者
     @dev param: _withdrawable 引き出し可能な資産総額
-    @dev param: dist Editionごとの引き出し可能な資産額
+    @dev param: _dist Editionごとの引き出し可能な資産額
    */
   function withdraw(
     address payable _recipient
   ) external virtual {
-    uint256 _withdrawable = 0;
-    for(uint256 id=1; id < newTokenId.current(); id++){
-      uint256 dist = _getDistribution(id) - _withdrawnForEach[id][_msgSender()];
-      _withdrawnForEach[id][_msgSender()] += dist;
-      _withdrawable += dist;
+    uint256 _dist = 0;
+    for(uint256 id=1; id < newTokenId.current(); ++id){
+      _dist += _getDistribution(id, _msgSender());
     }
+    uint256 _withdrawable = _dist - _withdrawnForEach[_msgSender()];
+    _withdrawnForEach[_msgSender()] += _withdrawable;
     require(_withdrawable > 0, 'withdrawable distribution is zero');
     _sendFunds(_recipient, _withdrawable);
   }
 
   /**
     @dev 引き出し可能な資産額の確認
-    @param _distribution 配分された資産総額
-    @param _withdrawable 引き出し可能な資産総額
+    @param _claimant 請求アドレス
+    @return _distribution 配分された資産総額
+    @return _withdrawable 引き出し可能な資産総額
    */
-  function withdrawable() public virtual view returns(
+  function withdrawable(
+    address _claimant
+  ) public virtual view returns(
     uint256 _distribution,
     uint256 _withdrawable
   ){
     _distribution = 0;
-    for(uint256 id=1; id < newTokenId.current(); id++){
-      _distribution += _getDistribution(id);
-      _withdrawable += _getDistribution(id) - _withdrawnForEach[id][_msgSender()];
+    for(uint256 id=1; id < newTokenId.current(); ++id){
+      _distribution += _getDistribution(id, _claimant);
     }
+    _withdrawable = _distribution - _withdrawnForEach[_msgSender()];
     return(_distribution, _withdrawable);
   }
 
@@ -433,11 +433,12 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     @dev 分配資産額の確認
    */
   function _getDistribution(
-    uint256 _tokenId
+    uint256 _tokenId,
+    address _claimant
   ) internal virtual view returns(uint256 _distribution){
     uint256 _share = 0;
-    for(uint32 i=0; i < musics[_tokenId].stakeHolders.length;i++){
-      if(musics[_tokenId].stakeHolders[i]==_msgSender()){
+    for(uint32 i=0; i < musics[_tokenId].stakeHolders.length; ++i){
+      if(musics[_tokenId].stakeHolders[i]==_claimant){
         _share = musics[_tokenId].share[i];
         break;
       }
@@ -469,15 +470,11 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
     uint256 _tokenId,
     uint32 _amount,
     bytes memory _data
-  )external virtual onlyOwner{
+  )external virtual onlyOwnerOrAgent {
     bytes32 digest = keccak256(abi.encode('oparationalMint(uint256 _tokenId,uint32 _amount)', _tokenId, _amount));
     _validateOparation(digest);
     // _tokenIdの有効性を確認
     require(_exists(_tokenId), 'The music does not exist');
-    // // 在庫の確認
-    // require(musics[_tokenId].numSold + _amount <= musics[_tokenId].quantity, 'Amount exceed stock');
-    // // 発行量+_amount(Reentrancy guard)
-    // musics[_tokenId].numSold += _amount;
     _mint(_recipient, _tokenId, _amount, _data);
   }
 
@@ -518,15 +515,13 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   }
 
   /**
-    @dev Returns e.g. https://.../{albumId}/{tokenId}
-    @notice WIP-1: modify tokenURI to https://.../{musicId}
+    @dev Returns e.g. https://.../{tokenId}
     @param _tokenId トークンID
     @return _tokenURI
    */
   function uri(uint256 _tokenId) public virtual view override returns (string memory) {
     require(_exists(_tokenId), 'ERC1155URIStorage: URI query for nonexistent token');
-    uint256 _albumId = uint256(musics[_tokenId].album);
-    return string(abi.encodePacked(baseURI,_albumId.toString(),'/',_tokenId.toString()));
+    return string(abi.encodePacked(baseURI,_tokenId.toString()));
   }
 
   /**
@@ -589,27 +584,22 @@ contract WAGMIMusicToken1155 is ERC1155Upgradeable, IERC2981Upgradeable, Ownable
   ) internal virtual {
     require(_stakeHolders.length==_share.length, "stakeHolders' and share's length don't match");
     uint32 s;
-    for(uint256 i=0; i<_share.length; i++){
+    for(uint256 i=0; i<_share.length; ++i){
       s += _share[i];
     }
     require(s == 100, 'total share must match to 100');
   }
 
   function _validateAlbum(
-    address payable[] calldata _stakeHolders,
-    uint256[] calldata _presalePrices,
-    uint256[] calldata _prices,
-    uint32[] calldata _quantities,
-    uint32[] calldata _presaleQuantities,
-    uint32[] calldata _share,
-    uint32[] calldata _purchaseLimits
+    Album calldata album
   ) internal virtual {
-    _validateShare(_stakeHolders, _share);
-    uint256 l = _quantities.length;
-    require(_presaleQuantities.length == l, "presaleQuantities length isn't enough");
-    require(_presalePrices.length == l, "presalePrices length isn't enough");
-    require(_prices.length == l, "prices length isn't enough");
-    require(_purchaseLimits.length == l, "purchaseLimit length isn't enough");
+    _validateShare(album._stakeHolders, album._share);
+    uint256 l = album._quantities.length;
+    require(album._presaleQuantities.length == l, "presaleQuantities length isn't enough");
+    require(album._presalePrices.length == l, "presalePrices length isn't enough");
+    require(album._prices.length == l, "prices length isn't enough");
+    require(album._presalePurchaseLimits.length == l, "presalePurchaseLimits length isn't enough");
+    require(album._purchaseLimits.length == l, "purchaseLimit length isn't enough");
   }
 
   /**

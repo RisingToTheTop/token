@@ -1,0 +1,33 @@
+{
+  "image": "https://lh3.googleusercontent.com/uVHxQVj37QLlIju86_DvNExnWlMDyevMgtnXSnAGfCGEK1nW_SGaqjA3IFJqp_4YEQRLbti58v2u0TsQ8ZEzFlYeuCnSzc2c2XXL",
+  "name": "\"WAGMI\" by Hibikilla (acappella)",
+  "description": "## Description\nThis is the first music NFT work of I-Note Records, which is headed by Hibikilla.\nIn the year 2022, Hibikilla presents a winning message song on the \"Afrobeats\" Riddim produced by Nigerian producer Eastbird.\nThe title \"WAGMI\" is an abbreviation of \"We are all gonna make it! The slang originated in the bodybuilding community, but later became a buzzword in the crypto community. Basically, in training, make-money (or study, work, music, etc.), the more you do, the more you get results...so why not just do it? mentality. NFA, DYOR.\n\n## 解説\nこれはHibikillaが主宰するI-Note Recordsの音楽NFT第一段。\n2022年、Hibikillaが送る新曲はナイジェリアのプロデューサーEastbird制作の ”Afrobeats” Riddimに乗せた勝ち上がり系メッセージソング。\nタイトル“WAGMI”は”We are all gonna make it!”の略語で、「みんなで上がってくぜ！」というニュアンスのスラング。\nアメリカのボディビル界隈発祥だが、その後クリプト界隈の流行語になった。トレーニングもメイクマネーも（なんなら勉強も仕事も音楽も）基本的にはやればやっただけ結果が出る…ならやる一択でしょ？のメンタル。\n詳しくはホワイトペーパーをご覧ください。\nhttps://www.notion.so/WAGMI-Music-NFT-white-paper-5d7acea429f94956b5e8f8cd3cf66151\nDYORでお願いします。\n\n## Credits\nGenre: Reggae (Dancehall)\nLabel: I-Note Records\nArtist: Hibikilla\nProducer: Hibikilla\nRiddim: Eastbird\nMixing Engineer: SRAD\nMastering Engineer: Hiroshi Shiota (Saltfield Mastering)",
+  "external_link": "https://www.notion.so/WAGMI-Music-NFT-white-paper-5d7acea429f94956b5e8f8cd3cf66151",
+  "animation_url": "https://openseauserdata.com/files/7384bfea4b98fb14273a8475edc546c6.mp4",
+  "traits": [
+      {
+          "trait_type": "background",
+          "value": "Glitch Vinyl",
+          "display_type": null,
+          "max_value": null,
+          "trait_count": 1,
+          "order": null
+      },
+      {
+          "trait_type": "Mastering Type",
+          "value": "Acappella",
+          "display_type": null,
+          "max_value": null,
+          "trait_count": 1,
+          "order": null
+      },
+      {
+          "trait_type": "Rarity",
+          "value": "Acappella",
+          "display_type": null,
+          "max_value": null,
+          "trait_count": 1,
+          "order": null
+      }
+  ]
+}

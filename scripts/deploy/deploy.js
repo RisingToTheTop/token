@@ -2,12 +2,22 @@
 const dotenv = require("dotenv");
 dotenv.config(); // setup dotenv
 
+/*
+  comment in omniMint !!!
+  comment in omniMint !!!
+  comment in omniMint !!!
+  comment out fix ETH/JPY rate !!!
+  comment out fix ETH/JPY rate !!!
+  comment out fix ETH/JPY rate !!!
+*/
+
 async function main() {
-  const factory = await hre.ethers.getContractFactory("WAGMIMusicToken1155");
+  const factory = await hre.ethers.getContractFactory("Token1155v2");
   const option = {
-    gasPrice: 25 * 10**9
+    gasPrice: 0 * 10**9
   }
   const contract = await factory.deploy();
+  // const contract = await factory.deploy();
   await contract.deployed();
   console.log("NFT deployed to:", contract.address);
   const gasPrice = contract.deployTransaction.gasPrice;

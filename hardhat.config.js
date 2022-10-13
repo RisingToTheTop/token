@@ -32,8 +32,8 @@ module.exports = {
     runOnCompile: true,
     disambiguatePaths: false,
   },
+  defaultNetwork: "hardhat",
   networks: {
-    hardhat: {},
     ethereum: {
       url: "https://eth-mainnet.alchemyapi.io/v2/" + alchemyApiKey,
       // gasPrice: 25 * 10**9,
@@ -61,10 +61,14 @@ module.exports = {
       url: "https://matic-mumbai.chainstacklabs.com",
       chainId: 80001,
       accounts: [ privateKey ]
-    }
+    },
+    hardhat: {
+      chainId: 1337,
+      allowUnlimitedContractSize: true
+    },
   },
   etherscan: {
-    apiKey: etherscanApiKey // EtherscanでVerifyする際にコメントアウトを外して使用
-    // apiKey: polygonscanApiKey // PolygonscanでVerifyする際にコメントアウトを外して使用
+    // apiKey: etherscanApiKey // EtherscanでVerifyする際にコメントアウトを外して使用
+    apiKey: polygonscanApiKey // PolygonscanでVerifyする際にコメントアウトを外して使用
   }
 };

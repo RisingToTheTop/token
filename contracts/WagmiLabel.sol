@@ -14,8 +14,8 @@ import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 import '@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol';
 import '@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol';
 import '@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol';
-import './WagmiMusicToken721.sol';
-import './WagmiMusicToken1155.sol';
+import './token/Token721.sol';
+import './token/Token1155v2.sol';
 
 contract WAGMIlabel is Initializable, OwnableUpgradeable {
   using CountersUpgradeable for CountersUpgradeable.Counter;
