@@ -1,10 +1,10 @@
 .env
-assets
 secrets.json
 artifacts
 cache
 assets/jackets/
 assets/sounds/
+output
 
 /node_modules
 /.pnp
@@ -26,3 +26,6 @@ assets/sounds/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# gitkeep
+!.gitkeep
