@@ -4,7 +4,6 @@ artifacts
 cache
 assets/jackets/
 assets/sounds/
-output/
 
 /node_modules
 /.pnp
