@@ -2,8 +2,10 @@
 secrets.json
 artifacts
 cache
-assets/jackets/
-assets/sounds/
+assets/jackets/*
+assets/sounds/*
+/output/*
+!.gitkeep
 
 /node_modules
 /.pnp
@@ -25,6 +27,3 @@ assets/sounds/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-
-/output/*
-!/output/.gitkeep
