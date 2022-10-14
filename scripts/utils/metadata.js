@@ -2,6 +2,7 @@
 const dotenv = require("dotenv");
 dotenv.config(); // setup dotenv
 
+const request = require('request');
 const Moralis = require("moralis-v1/node");
 const request = require("request");
 const fs = require("fs");
@@ -63,7 +64,16 @@ const uploadImage = async () => {
   for (let i = 1; i <= editionSize; i++) {
     let id = i.toString();
     let image_base64, music_base64, ifiletype, mfiletype;
-    
+    image_base64 = music_base64 = null;
+
+    if(assetElement[i].url){
+      UrlArray.push({
+        imageURL:"imageURL_NULL", 
+        musicURL:"musicURL_NULL"
+      });
+      continue;
+    }
+
     // データをIPFSにアップロード
     if(fs.existsSync(`./assets/jackets/${id}.jpeg`)){
       image_base64 = await btoa(fs.readFileSync(`./assets/jackets/${id}.jpeg`));
@@ -100,7 +110,6 @@ const uploadImage = async () => {
     //   }));
     //   mfiletype = "mp3";
     // }
-
     let image_file = new Moralis.File("image.png", { base64: `data:image/${ifiletype};base64,${image_base64}` });
     let music_file = new Moralis.File("music.mp3", { base64: `data:audio/${mfiletype};base64,${music_base64}` });
     await image_file.saveIPFS({ useMasterKey: true });
@@ -108,7 +117,7 @@ const uploadImage = async () => {
     console.log(`Processing ${i}/${editionSize}...`)
     console.log("IPFS address of Image: ", image_file.ipfs());
     console.log("IPFS address of Music: ", music_file.ipfs());
-   
+    
     UrlArray.push({
       imageURL:image_file.ipfs(), 
       musicURL:music_file.ipfs()
@@ -126,17 +135,29 @@ const createMetadata = async () => {
 
   for (let i = 0; i < editionSize; i++){
     let id = (i+1).toString()
-    let imageURL = DataArray[i].imageURL
-    let musicURL = DataArray[i].musicURL
-  
-    // メタデータを記述
-    let metadata = {
-      "name": assetElement[i].name,
-      "description": assetElement[i].description,
-      "image": imageURL,
-      "animation_url": musicURL,
-      "attributes": assetElement[i].attributes
+    let metadata;
+
+    if(assetElement[i].url){
+      await request.get(assetElement[i].url, (err, res, body) => {
+        if (err) {
+          console.log('Error: ' + err.message);
+        }
+        metadata = body;
+      })
+    }else{
+      let imageURL = DataArray[i].imageURL
+      let musicURL = DataArray[i].musicURL
+    
+      // メタデータを記述
+      metadata = {
+        "name": assetElement[i].name,
+        "description": assetElement[i].description,
+        "image": imageURL,
+        "animation_url": musicURL,
+        "attributes": assetElement[i].attributes
+      }
     }
+    
     metaDataArray.push(metadata);
   
     fs.writeFileSync(
@@ -193,7 +214,7 @@ const uploadMetadata = async () => {
 };
 
 const startCreating = async () => {
-  // await createMetadata();
+  await createMetadata();
   await uploadMetadata();
   console.log("All finished!")
 };

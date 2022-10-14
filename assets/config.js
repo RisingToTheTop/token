@@ -80,7 +80,7 @@ const assetElement = [
   },
   {
     // 5. Normal
-    
+    url:"https://api.opensea.io/api/v2/metadata/matic/0x2953399124f0cbb46d2cbacd8a89cf0599974963/78555306292208822264975053909961537674478548303611333324072215595578311049286"
   },
   {
     // 6. MV Rare

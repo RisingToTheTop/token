@@ -37,6 +37,7 @@
     "@a16z/contracts": "^0.0.8",
     "@chainlink/contracts": "^0.4.1",
     "dnslink": "^0.2.8",
-    "moralis-v1": "^1.11.0"
+    "moralis-v1": "^1.11.0",
+    "node-fetch": "^3.2.10"
   }
 }
