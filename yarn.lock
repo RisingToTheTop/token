@@ -5877,7 +5877,7 @@
   "resolved" "https://registry.npmjs.org/handlebars/-/handlebars-4.7.7.tgz"
   "version" "4.7.7"
   dependencies:
-    "minimist" "1.2.6"
+    "minimist" "^1.2.5"
     "neo-async" "^2.6.0"
     "source-map" "^0.6.1"
     "wordwrap" "^1.0.0"
@@ -6839,8 +6839,8 @@
   "resolved" "https://registry.npmjs.org/json-schema-traverse/-/json-schema-traverse-1.0.0.tgz"
   "version" "1.0.0"
 
-"json-schema@^0.4.0":
-  version "0.4.0"
+"json-schema@0.2.3":
+  "version" "0.2.3"
 
 "json-schema@0.4.0":
   "integrity" "sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA=="
@@ -10323,10 +10323,10 @@
     "has-symbols" "^1.0.3"
     "which-boxed-primitive" "^1.0.2"
 
-"underscore@1.12.1":
+"underscore@1.9.1":
   "integrity" "sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg=="
-  "resolved" "https://registry.npmjs.org/underscore/-/underscore-1.12.1.tgz"
-  "version" "1.12.1"
+  "resolved" "https://registry.npmjs.org/underscore/-/underscore-1.9.1.tgz"
+  "version" "1.9.1"
 
 "undici@^5.4.0":
   "integrity" "sha512-1F7Vtcez5w/LwH2G2tGnFIihuWUlc58YidwLiCv+jR2Z50x0tNXpRRw7eOIJ+GvqCqIkg9SB7NWAJ/T9TLfv8Q=="
@@ -10525,7 +10525,7 @@
     "@types/node" "^12.12.6"
     "got" "9.6.0"
     "swarm-js" "^0.1.40"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
 
 "web3-bzz@1.7.4":
   "integrity" "sha512-w9zRhyEqTK/yi0LGRHjZMcPCfP24LBjYXI/9YxFw9VqsIZ9/G0CRCnUt12lUx0A56LRAMpF7iQ8eA73aBcO29Q=="
@@ -10541,7 +10541,7 @@
   "resolved" "https://registry.npmjs.org/web3-core-helpers/-/web3-core-helpers-1.2.11.tgz"
   "version" "1.2.11"
   dependencies:
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-eth-iban" "1.2.11"
     "web3-utils" "1.2.11"
 
@@ -10559,7 +10559,7 @@
   "version" "1.2.11"
   dependencies:
     "@ethersproject/transactions" "^5.0.0-beta.135"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core-helpers" "1.2.11"
     "web3-core-promievent" "1.2.11"
     "web3-core-subscriptions" "1.2.11"
@@ -10595,7 +10595,7 @@
   "resolved" "https://registry.npmjs.org/web3-core-requestmanager/-/web3-core-requestmanager-1.2.11.tgz"
   "version" "1.2.11"
   dependencies:
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core-helpers" "1.2.11"
     "web3-providers-http" "1.2.11"
     "web3-providers-ipc" "1.2.11"
@@ -10618,7 +10618,7 @@
   "version" "1.2.11"
   dependencies:
     "eventemitter3" "4.0.4"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core-helpers" "1.2.11"
 
 "web3-core-subscriptions@1.7.4":
@@ -10661,7 +10661,7 @@
   "version" "1.2.11"
   dependencies:
     "@ethersproject/abi" "5.0.0-beta.153"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-utils" "1.2.11"
 
 "web3-eth-abi@1.7.4":
@@ -10682,7 +10682,7 @@
     "ethereumjs-common" "^1.3.2"
     "ethereumjs-tx" "^2.1.1"
     "scrypt-js" "^3.0.1"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "uuid" "3.3.2"
     "web3-core" "1.2.11"
     "web3-core-helpers" "1.2.11"
@@ -10712,7 +10712,7 @@
   "version" "1.2.11"
   dependencies:
     "@types/bn.js" "^4.11.5"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core" "1.2.11"
     "web3-core-helpers" "1.2.11"
     "web3-core-method" "1.2.11"
@@ -10742,7 +10742,7 @@
   dependencies:
     "content-hash" "^2.5.2"
     "eth-ens-namehash" "2.0.8"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core" "1.2.11"
     "web3-core-helpers" "1.2.11"
     "web3-core-promievent" "1.2.11"
@@ -10809,7 +10809,7 @@
   "resolved" "https://registry.npmjs.org/web3-eth/-/web3-eth-1.2.11.tgz"
   "version" "1.2.11"
   dependencies:
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core" "1.2.11"
     "web3-core-helpers" "1.2.11"
     "web3-core-method" "1.2.11"
@@ -10907,7 +10907,7 @@
   "version" "1.2.11"
   dependencies:
     "oboe" "2.1.4"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core-helpers" "1.2.11"
 
 "web3-providers-ipc@1.7.4":
@@ -10924,7 +10924,7 @@
   "version" "1.2.11"
   dependencies:
     "eventemitter3" "4.0.4"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "web3-core-helpers" "1.2.11"
     "websocket" "^1.0.31"
 
@@ -10981,7 +10981,7 @@
     "ethjs-unit" "0.1.6"
     "number-to-bn" "1.7.0"
     "randombytes" "^2.1.0"
-    "underscore" "1.12.1"
+    "underscore" "1.9.1"
     "utf8" "3.0.0"
 
 "web3@1.2.11":
