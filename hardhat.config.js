@@ -68,7 +68,7 @@ module.exports = {
     },
   },
   etherscan: {
-    // apiKey: etherscanApiKey // EtherscanでVerifyする際にコメントアウトを外して使用
-    apiKey: polygonscanApiKey // PolygonscanでVerifyする際にコメントアウトを外して使用
+    apiKey: etherscanApiKey // EtherscanでVerifyする際にコメントアウトを外して使用
+    // apiKey: polygonscanApiKey // PolygonscanでVerifyする際にコメントアウトを外して使用
   }
 };

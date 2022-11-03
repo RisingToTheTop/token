@@ -12,7 +12,15 @@ dotenv.config(); // setup dotenv
 */
 
 async function main() {
-  const factory = await hre.ethers.getContractFactory("Token1155v2");
+  const Lib = await ethers.getContractFactory("MusicLib");
+  const lib = await Lib.deploy();
+  await lib.deployed();
+
+  const factory = await hre.ethers.getContractFactory("Record1155v2",{
+    libraries: {
+      MusicLib: lib.address,
+    }
+  });
   const option = {
     gasPrice: 0 * 10**9
   }

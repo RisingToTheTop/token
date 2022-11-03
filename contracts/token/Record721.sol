@@ -20,10 +20,10 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/Ag
 import {IDistributor} from "../interfaces/IDistributor.sol";
 
 /**
- * @title Token721
+ * @title Record721
  * @author WAGMIMusic
  */
-contract Token721 is ERC721Upgradeable, IERC2981Upgradeable, OwnableUpgradeable {
+contract Record721 is ERC721Upgradeable, IERC2981Upgradeable, OwnableUpgradeable {
   using CountersUpgradeable for CountersUpgradeable.Counter;
   using StringsUpgradeable for uint256;
 
@@ -626,7 +626,7 @@ contract Token721 is ERC721Upgradeable, IERC2981Upgradeable, OwnableUpgradeable 
     @return converter 円 => Wei
    */
   function _getEtherPerJPY()private view returns(uint256){
-    return(10**13);
+    // return(10**13);
     // Default: JPY(円)
     ( 
     /*uint80 roundID*/, 

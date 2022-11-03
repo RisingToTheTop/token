@@ -8,11 +8,19 @@ chai.use(require('chai-bignumber')(ethers.BigNumber));
 const provider = waffle.provider;
 
 describe("main", () => {
-  let owner, bob, alice, factory, token, rest, leafNodes, merkleTree, rootHash, hexPloof, i_contract, i_owner, i_alice, i_aggregator, exFactory, exContract;
+  let owner, bob, alice, aggregator, factory, token, rest, leafNodes, merkleTree, rootHash, hexPloof, i_contract, i_owner, i_alice, i_aggregator, exFactory, exContract;
   beforeEach(async() => {
     [owner, bob, alice, fund, aggregator, ...rest] = await ethers.getSigners();
 
-    factory = await ethers.getContractFactory("Token1155v2");
+    const Lib = await ethers.getContractFactory("MusicLib");
+    const lib = await Lib.deploy();
+    await lib.deployed();
+
+    factory = await ethers.getContractFactory("Record1155v2",{
+      libraries: {
+        MusicLib: lib.address,
+      }
+    });
 
     token = await factory.deploy();
     await token.deployed();
@@ -27,34 +35,34 @@ describe("main", () => {
 
   describe("normal method for erc1155", () => {
     beforeEach(async ()=>{
-      // const albumData = {
-      //   _stakeHolders:[owner.address, alice.address, bob.address],
-      //   _aggregator: aggregator.address,
-      //   _presalePrices:[ethers.utils.parseEther("1"), ethers.utils.parseEther("1")],
-      //   _prices:[ethers.utils.parseEther("1"), ethers.utils.parseEther("1")],
-      //   _recoupLines:[10000, 10000],
-      //   _quantities:[50, 20],
-      //   _presaleQuantities:[10, 5],
-      //   _share:[50, 30, 20],
-      //   _purchaseLimits:[2, 2],
-      //   _presalePurchaseLimits:[2, 2],
-      //   _royalty:521,
-      //   _merkleRoot:rootHash
-      // }
       const albumData = {
         _stakeHolders:[owner.address, alice.address, bob.address],
         _aggregator: aggregator.address,
-        _presalePrices:[ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5")],
-        _prices:[ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5")],
-        _recoupLines:100,
-        _presaleQuantities:[10, 10, 10, 10],
-        _quantities:[10, 10, 10, 10],
-        _share:[80,20],
-        _presalePurchaseLimits:[10,10,10,10],
-        _purchaseLimits:[10,10,10,10],
-        _royalty:500,
+        _presalePrices:[ethers.utils.parseEther("1"), ethers.utils.parseEther("1")],
+        _prices:[ethers.utils.parseEther("1"), ethers.utils.parseEther("1")],
+        _recoupLines:[10000, 10000],
+        _quantities:[50, 20],
+        _presaleQuantities:[10, 5],
+        _share:[50, 30, 20],
+        _purchaseLimits:[2, 2],
+        _presalePurchaseLimits:[2, 2],
+        _royalty:521,
         _merkleRoot:rootHash
       }
+      // const albumData = {
+      //   _stakeHolders:[owner.address, alice.address, bob.address],
+      //   _aggregator: aggregator.address,
+      //   _presalePrices:[ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5")],
+      //   _prices:[ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5"), ethers.utils.parseEther("0.5")],
+      //   _recoupLines:[100,100,100,100],
+      //   _presaleQuantities:[10, 10, 10, 10],
+      //   _quantities:[10, 10, 10, 10],
+      //   _share:[80,20],
+      //   _presalePurchaseLimits:[10,10,10,10],
+      //   _purchaseLimits:[10,10,10,10],
+      //   _royalty:500,
+      //   _merkleRoot:rootHash
+      // }
       const musicData = {
         stakeHolders: [owner.address, alice.address, bob.address],
         aggregator: aggregator.address,
@@ -82,7 +90,7 @@ describe("main", () => {
     describe("presale", () => {
       beforeEach(async ()=>{
         const tokenarray = await token.getTokenIdsOfAlbum(1);
-        tx = await token.startPresale(tokenarray);
+        tx = await token.handleSaleState(tokenarray, 1);
         await tx.wait();
         hexPloof = merkleTree.getHexProof(keccak256(alice.address));
       })
@@ -96,13 +104,13 @@ describe("main", () => {
         await tx.wait();
         tx = await token.connect(alice).omniMint(1,1, 0x0, hexPloof, { value: ethers.utils.parseEther("1")});
         await tx.wait();
-        await expect(token.connect(alice).omniMint(1,1, 0x0, hexPloof, { value: ethers.utils.parseEther("1")})).to.be.revertedWith('Accumulayion amount of mint exceeds limit');
+        await expect(token.connect(alice).omniMint(1,1, 0x0, hexPloof, { value: ethers.utils.parseEther("1")})).to.be.revertedWith('exceeds limit');
       })
     })
     describe("publicsale", () => {
       beforeEach(async ()=>{
         const tokenarray = await token.getTokenIdsOfAlbum(1);
-        tx = await token.startPublicSale(tokenarray);
+        tx = await token.handleSaleState(tokenarray, 2);
         await tx.wait();
       })
       it("public Sale", async ()=>{
@@ -113,7 +121,7 @@ describe("main", () => {
       it("public sale renda", async ()=>{
         tx = await token.connect(bob).omniMint(1,2, 0x0, [], { value: ethers.utils.parseEther("2")});
         await tx.wait();
-        await expect(token.connect(bob).omniMint(1,1, 0x0, [], { value: ethers.utils.parseEther("1")})).to.be.revertedWith('Accumulayion amount of mint exceeds limit');
+        await expect(token.connect(bob).omniMint(1,1, 0x0, [], { value: ethers.utils.parseEther("1")})).to.be.revertedWith('exceeds limit');
       })
     })
     describe("check parameter", ()=>{
@@ -126,7 +134,7 @@ describe("main", () => {
     describe("withdraw revenue", ()=>{
       beforeEach(async () => {
         const tokenarray = await token.getTokenIdsOfAlbum(1);
-        tx = await token.startPublicSale(tokenarray);
+        tx = await token.handleSaleState(tokenarray, 2);
         await tx.wait();
         // first funding
         tx = await token.connect(fund).omniMint(1,1, 0x0, [], { value: ethers.utils.parseEther("1")});

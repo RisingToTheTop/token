@@ -7,8 +7,8 @@ import {IERC721Receiver} from '@openzeppelin/contracts/token/ERC721/IERC721Recei
 import {ERC1155Receiver} from '@openzeppelin/contracts/token/ERC1155/utils/ERC1155Receiver.sol';
 import {IERC721Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol';
 import {IERC1155Upgradeable} from '@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155Upgradeable.sol';
-import {Token721} from  '../token/Token721.sol';
-import {Token1155v2} from  '../token/Token1155v2.sol';
+import {Record721} from  '../token/Record721.sol';
+import {Record1155v2} from  '../token/Record1155v2.sol';
 
 /**
 __        ___    ____ __  __ ___ __  __ _   _ ____ ___ ____ 
@@ -68,7 +68,7 @@ contract StakingEscrow is IEscrow, IERC721Receiver, Ownable{
     require(_policy.period != 0, "policy of number doesn't exist");
 
     for(uint256 i=0; i<_policy.requirement.length; ++i){
-      require(Token721(erc721_address).tokenToMusic(_token_ids[i])==_policy.requirement[i], "tokenId is incorrect");
+      require(Record721(erc721_address).tokenToMusic(_token_ids[i])==_policy.requirement[i], "tokenId is incorrect");
       IERC721Upgradeable(erc721_address).safeTransferFrom(_msgSender(), address(this), _token_ids[i], "");
     }
 
@@ -121,7 +121,7 @@ contract StakingEscrow is IEscrow, IERC721Receiver, Ownable{
     uint256[] memory _token_ids
   )private{
     for(uint256 i=0; i<_token_ids.length; ++i){
-      Token1155v2(erc1155_address).operationalMint(_msgSender(), _token_ids[i], 1, "");
+      Record1155v2(erc1155_address).operationalMint(_msgSender(), _token_ids[i], 1, "");
     }
   }
 
