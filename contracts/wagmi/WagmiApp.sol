@@ -42,6 +42,7 @@ contract WAGMIApp is OwnableUpgradeable, IWAGMIApp {
   mapping(address => uint256) private _withdrawnForEach;
   // 楽曲id => リクープ履歴
   mapping(uint256 => uint256) private _recoupedValue;
+  mapping(uint256 => bool) private _recouped;
 
   /**
     @dev 実行権限の確認
@@ -131,7 +132,7 @@ contract WAGMIApp is OwnableUpgradeable, IWAGMIApp {
     if(distributor == address(0x0)){
       // Defaultの分配契約
       _distribution = uint256(_share) * (profit[_tokenId] - calculateRecoupLine(_tokenId)) / 100;
-      _approval = (_recoupedValue[_tokenId] != 0 || musics[_tokenId].aggregator == address(0x0));
+      _approval = (_recouped[_tokenId] || musics[_tokenId].aggregator == address(0x0));
       return(_approval, _distribution);
     }
     // 分配コントラクトの通信プロトコル
@@ -145,11 +146,12 @@ contract WAGMIApp is OwnableUpgradeable, IWAGMIApp {
    */
   function recoup(uint256 _tokenId) external virtual override {
     require(musics[_tokenId].aggregator == msg.sender, "caller should be aggregator");
-    require(_recoupedValue[_tokenId] == 0, "cost have been recouped");
+    require(!_recouped[_tokenId], "cost have been recouped");
     uint256 value = calculateRecoupLine(_tokenId);
     if(profit[_tokenId] < value){
       value = profit[_tokenId];
     }
+    _recouped[_tokenId] = true;
     _recoupedValue[_tokenId] = value;
     _sendFunds(musics[_tokenId].aggregator, value);
     emit Recoup(_tokenId, musics[_tokenId].aggregator, value);
@@ -162,7 +164,7 @@ contract WAGMIApp is OwnableUpgradeable, IWAGMIApp {
    */
   function calculateRecoupLine(uint256 _tokenId) public virtual override view returns(uint256 value){
     // リクープ後
-    if(_recoupedValue[_tokenId] != 0){
+    if(_recouped[_tokenId]){
       return _recoupedValue[_tokenId];
     }
     // default
@@ -314,3 +316,4 @@ contract WAGMIApp is OwnableUpgradeable, IWAGMIApp {
     return uint256(_numerator) * 1 ether / uint256(_denominator);
   }
 }
+
