@@ -4,7 +4,6 @@ dotenv.config(); // setup dotenv
 
 const request = require('request');
 const Moralis = require("moralis-v1/node");
-const request = require("request");
 const fs = require("fs");
 const { default: axios } = require("axios");
 const { editionSize, assetElement } = require("../../assets/config.js");
@@ -14,9 +13,10 @@ const { editionSize, assetElement } = require("../../assets/config.js");
 // const masterKey = process.env.MASTER_KEY;
 // const apiUrl = process.env.API_URL;
 // const apiKey = process.env.API_KEY;
-const serverUrl = "https://4d8xasi5xhdn.usemoralis.com:2053/server";
-const appId = "dgicIpm38D7Swob4KfRN2EpjqJbCLpMxCjMFKd95";
-const masterKey = "1JAgUGg1CFFlFaAcjUqyZ4wd59otx48ba4HzJKjS";
+
+const serverUrl = "https://wagmi-music.herokuapp.com/server";
+const appId = "001";
+const masterKey = "123";
 const apiUrl = "https://deep-index.moralis.io/api/v2/ipfs/uploadFolder";
 const apiKey = "Xe3Rkn1tkm7dc83ElaTUbsNNtdcYR2Gi5jrmrSsUbdxL4DYr5EHo8ZNXpaPEDXie";
 
@@ -61,7 +61,7 @@ const saveToDb = async (metaHash) => {
 const uploadImage = async () => {
   const UrlArray = [];
 
-  for (let i = 1; i <= editionSize; i++) {
+  for (let i = 0; i < editionSize; i++) {
     let id = i.toString();
     let image_base64, music_base64, ifiletype, mfiletype;
     image_base64 = music_base64 = null;
@@ -101,15 +101,6 @@ const uploadImage = async () => {
     } else {
       console.log("sounds are not exist.")
     }
-    // else if(fs.existsSync(`./asset/${id}/music.mp3`)) {
-    //   music_base64 = await btoa(fs.readFileSync(`./asset/${id}/music.mp3`));
-    //   mfiletype = "mp3";
-    // } else if(fs.existsSync(`./asset/${id}/music.mp4`)) {
-    //   music_base64 = await btoa(fs.readFileSync(`./asset/${id}/music.mp4`, (err,data) => {
-    //     console.log(err)
-    //   }));
-    //   mfiletype = "mp3";
-    // }
     let image_file = new Moralis.File("image.png", { base64: `data:image/${ifiletype};base64,${image_base64}` });
     let music_file = new Moralis.File("music.mp3", { base64: `data:audio/${mfiletype};base64,${music_base64}` });
     await image_file.saveIPFS({ useMasterKey: true });
@@ -138,12 +129,16 @@ const createMetadata = async () => {
     let metadata;
 
     if(assetElement[i].url){
-      await request.get(assetElement[i].url, (err, res, body) => {
-        if (err) {
-          console.log('Error: ' + err.message);
-        }
-        metadata = body;
-      })
+      try {
+        const res = await axios.get(assetElement[i].url);
+        metadata = res.data;
+      } catch (error) {
+        const {
+          status,
+          statusText
+        } = error.response;
+        console.log(`Error! HTTP Status: ${status} ${statusText}`);
+      }
     }else{
       let imageURL = DataArray[i].imageURL
       let musicURL = DataArray[i].musicURL
@@ -168,54 +163,54 @@ const createMetadata = async () => {
   writeMetaData(metaDataArray);
 }
 
-const uploadMetadata = async () => {
-  const promiseArray = [];
-  const ipfsArray = [];
+// const uploadMetadata = async () => {
+//   const promiseArray = [];
+//   const ipfsArray = [];
 
-  for(let i = 1; i <= editionSize; i++){
-    let id = i.toString();
+//   for(let i = 1; i <= editionSize; i++){
+//     let id = i.toString();
   
-    // jsonファイルをipfsArrayにpush
-    promiseArray.push(
-      new Promise((res, rej) => {
-        fs.readFile(`./output/${id}.json`, (err, data) => {
-          if (err) rej();
-          ipfsArray.push({
-            path: `metadata/${id}`,
-            content: data.toString("base64")
-          });
-          res();
-        });
-      })
-    );
-  }
+//     // jsonファイルをipfsArrayにpush
+//     promiseArray.push(
+//       new Promise((res, rej) => {
+//         fs.readFile(`./output/${id}.json`, (err, data) => {
+//           if (err) rej();
+//           ipfsArray.push({
+//             path: `metadata/${id}`,
+//             content: data.toString("base64")
+//           });
+//           res();
+//         });
+//       })
+//     );
+//   }
 
-  //プロミスが返ってきたらipfsArrayをapiにpost
-  Promise.all(promiseArray).then(() => {
-  axios
-    .post(apiUrl, ipfsArray, {
-      headers: {
-        "X-API-Key": apiKey,
-        "content-type": "application/json",
-        accept: "application/json"
-      }
-    })
-    .then(res => {
-      let metaCID = res.data[0].path.split("/")[4];
-      console.log("META FILE PATHS:", res.data);
-      //モラリスにアップロード
-      saveToDb(metaCID);
-      console.log("all saved")
-    })
-    .catch(err => {
-      console.log(err);
-    });
-  });
-};
+//   //プロミスが返ってきたらipfsArrayをapiにpost
+//   Promise.all(promiseArray).then(() => {
+//   axios
+//     .post(apiUrl, ipfsArray, {
+//       headers: {
+//         "X-API-Key": apiKey,
+//         "content-type": "application/json",
+//         accept: "application/json"
+//       }
+//     })
+//     .then(res => {
+//       let metaCID = res.data[0].path.split("/")[4];
+//       console.log("META FILE PATHS:", res.data);
+//       //モラリスにアップロード
+//       saveToDb(metaCID);
+//       console.log("all saved")
+//     })
+//     .catch(err => {
+//       console.log(err);
+//     });
+//   });
+// };
 
 const startCreating = async () => {
   await createMetadata();
-  await uploadMetadata();
+  // await uploadMetadata();
   console.log("All finished!")
 };
 
