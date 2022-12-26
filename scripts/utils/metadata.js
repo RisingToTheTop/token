@@ -163,54 +163,54 @@ const createMetadata = async () => {
   writeMetaData(metaDataArray);
 }
 
-// const uploadMetadata = async () => {
-//   const promiseArray = [];
-//   const ipfsArray = [];
+const uploadMetadata = async () => {
+  const promiseArray = [];
+  const ipfsArray = [];
 
-//   for(let i = 1; i <= editionSize; i++){
-//     let id = i.toString();
+  for(let i = 1; i <= editionSize; i++){
+    let id = i.toString();
   
-//     // jsonファイルをipfsArrayにpush
-//     promiseArray.push(
-//       new Promise((res, rej) => {
-//         fs.readFile(`./output/${id}.json`, (err, data) => {
-//           if (err) rej();
-//           ipfsArray.push({
-//             path: `metadata/${id}`,
-//             content: data.toString("base64")
-//           });
-//           res();
-//         });
-//       })
-//     );
-//   }
+    // jsonファイルをipfsArrayにpush
+    promiseArray.push(
+      new Promise((res, rej) => {
+        fs.readFile(`./output/${id}.json`, (err, data) => {
+          if (err) rej();
+          ipfsArray.push({
+            path: `metadata/${id}`,
+            content: data.toString("base64")
+          });
+          res();
+        });
+      })
+    );
+  }
 
-//   //プロミスが返ってきたらipfsArrayをapiにpost
-//   Promise.all(promiseArray).then(() => {
-//   axios
-//     .post(apiUrl, ipfsArray, {
-//       headers: {
-//         "X-API-Key": apiKey,
-//         "content-type": "application/json",
-//         accept: "application/json"
-//       }
-//     })
-//     .then(res => {
-//       let metaCID = res.data[0].path.split("/")[4];
-//       console.log("META FILE PATHS:", res.data);
-//       //モラリスにアップロード
-//       saveToDb(metaCID);
-//       console.log("all saved")
-//     })
-//     .catch(err => {
-//       console.log(err);
-//     });
-//   });
-// };
+  //プロミスが返ってきたらipfsArrayをapiにpost
+  Promise.all(promiseArray).then(() => {
+  axios
+    .post(apiUrl, ipfsArray, {
+      headers: {
+        "X-API-Key": apiKey,
+        "content-type": "application/json",
+        accept: "application/json"
+      }
+    })
+    .then(res => {
+      let metaCID = res.data[0].path.split("/")[4];
+      console.log("META FILE PATHS:", res.data);
+      //モラリスにアップロード
+      saveToDb(metaCID);
+      console.log("all saved")
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  });
+};
 
 const startCreating = async () => {
   await createMetadata();
-  // await uploadMetadata();
+  await uploadMetadata();
   console.log("All finished!")
 };
 
